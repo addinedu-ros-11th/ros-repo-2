@@ -1,0 +1,15 @@
+[Unit]
+Description=Pinky Web Runtime (camera + voice + face + autonav)
+After=network.target pinky-emotion.service
+
+[Service]
+Type=simple
+User=pinky
+WorkingDirectory=/home/pinky
+Environment=ROS_DOMAIN_ID=11
+ExecStart=/bin/bash /home/pinky/pinky_web/run_pinky_web.sh
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

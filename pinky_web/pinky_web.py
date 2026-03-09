@@ -3265,6 +3265,7 @@ _autonav_lane_kp = 1.35
 _autonav_lane_turn_max = 0.72
 _autonav_lane_hsv_low = (6, 95, 70)
 _autonav_lane_hsv_high = (28, 255, 255)
+_autonav_lane_roi_top_ratio = 0.40
 _autonav_lane_jump_px = 48.0
 _autonav_lane_virtual_hold = 0.45
 _autonav_lane_turn_gate_x = 205.0
@@ -3314,6 +3315,9 @@ _autonav_phase2_green_hsv_low = (36, 45, 40)
 _autonav_phase2_green_hsv_high = (88, 255, 255)
 _autonav_phase2_blue_hsv_low = (100, 120, 70)
 _autonav_phase2_blue_hsv_high = (130, 255, 255)
+_autonav_phase2_align_roi_top_ratio = 0.22
+_autonav_phase2_boundary_roi_top_ratio = 0.40
+_autonav_phase2_parking_roi_top_ratio = 0.28
 _autonav_phase2_align_ok_streak = 0
 _autonav_phase2_align_need_frames = 6
 _autonav_phase2_align_tol_deg = 10.0
@@ -4210,7 +4214,7 @@ def _detect_phase2_align_angles(frame):
     if h < 32 or w < 32:
         return None, None, 0.0
 
-    roi_top = max(0, h // 3)
+    roi_top = int(max(0, min(h - 2, round(float(_autonav_phase2_align_roi_top_ratio) * h))))
     roi_bottom = max(roi_top + 1, h - 15)
     roi = frame[roi_top:roi_bottom, :]
     hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
@@ -4283,7 +4287,7 @@ def _detect_phase2_boundary_x(frame, prev_x: float = None):
         return None
     _autonav_phase2_guide_line = None
 
-    y0 = int(max(0, min(h - 1, h * 0.52)))
+    y0 = int(max(0, min(h - 1, round(float(_autonav_phase2_boundary_roi_top_ratio) * h))))
     roi = frame[y0:h, :]
     hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
     gmask = cv2.inRange(
@@ -4505,7 +4509,7 @@ def _detect_phase2_parking_area(frame):
     blue = cv2.bitwise_and(blue, cv2.bitwise_not(green))
 
     # Parking area is on floor; ignore top zone.
-    roi_top = int(max(0, min(h - 1, h * 0.36)))
+    roi_top = int(max(0, min(h - 1, round(float(_autonav_phase2_parking_roi_top_ratio) * h))))
     blue[:roi_top, :] = 0
     kernel = np.ones((5, 5), dtype=np.uint8)
     blue = cv2.morphologyEx(blue, cv2.MORPH_CLOSE, kernel, iterations=2)
@@ -5349,7 +5353,7 @@ def _detect_orange_line_x(frame, prev_x: float = None):
     if h < 16 or w < 16:
         return None
 
-    y0 = int(max(0, min(h - 1, h * 0.52)))
+    y0 = int(max(0, min(h - 1, round(float(_autonav_lane_roi_top_ratio) * h))))
     roi = frame[y0:h, :]
     hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
     lo = np.array(_autonav_lane_hsv_low, dtype=np.uint8)

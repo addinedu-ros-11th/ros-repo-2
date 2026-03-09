@@ -5012,6 +5012,18 @@ def _autonav_cmd_parking_phase2():
             and int(cur_cell[1]) < int(stop_cell[1])
         ):
             corridor_lock = True
+        # Symmetric corridor lock for slots 6..10:
+        # from park(6,5) toward stop(2,5), keep straight on top row and
+        # ignore soft obstacle hints that often come from side reflections.
+        if (
+            int(target_slot) in (6, 7, 8, 9, 10)
+            and str(goal_kind) == "to_slot"
+            and stop_cell is not None
+            and int(cur_heading) == 2
+            and int(cur_cell[1]) == int(stop_cell[1]) == 5
+            and int(cur_cell[0]) > int(stop_cell[0])
+        ):
+            corridor_lock = True
         axis_aligned = (
             line_e_deg is not None
             and line_conf >= 0.12
